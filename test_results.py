@@ -5,7 +5,7 @@ from os import system
 from random import shuffle
 
 ################### parameters/constants  ####################
-MIN_GENS = 15
+MIN_GENS = 10
 ROOMS = 1
 CLASSES = 80
 CL_DAYS = 5 # mon, tue, wed, thu, fri
@@ -16,7 +16,7 @@ PREFERENTIAL = 2
 
 ################ checking folder structure ###################
 cmd_n_files = "ls -l genxx | grep gen | wc -l"
-n_files = int(subprocess.check_output(cmd_n_files, shell=True))
+n_files = int(subprocess.check_output(cmd_n_files, shell=True)) - 1
 #print "[DEBUG] n_files = " + str(n_files)
 
 
@@ -36,13 +36,13 @@ def bitwise(one, two):
   hours_of_day = out[CL_HOURS-1 : ]
 
   if   (days_of_week.count(PREFERENTIAL) == 1) and (hours_of_day.count(PREFERENTIAL) == 1):
-    return 3, days_of_week.index(PREFERENTIAL), hours_of_day.count(PREFERENTIAL)
+    return 3, days_of_week.index(PREFERENTIAL), hours_of_day.index(PREFERENTIAL)
   elif (days_of_week.count(PREFERENTIAL) == 1) and (hours_of_day.count(AVAILABLE) == 1):
-    return 2, days_of_week.index(PREFERENTIAL), hours_of_day.count(AVAILABLE)
+    return 2, days_of_week.index(PREFERENTIAL), hours_of_day.index(AVAILABLE)
   elif (days_of_week.count(AVAILABLE) == 1) and (hours_of_day.count(PREFERENTIAL) == 1):
-    return 2, days_of_week.index(AVAILABLE), hours_of_day.count(PREFERENTIAL)
+    return 2, days_of_week.index(AVAILABLE), hours_of_day.index(PREFERENTIAL)
   elif (days_of_week.count(AVAILABLE) == 1) and (hours_of_day.count(AVAILABLE) == 1):
-    return 1, days_of_week.index(AVAILABLE), hours_of_day.count(AVAILABLE)
+    return 1, days_of_week.index(AVAILABLE), hours_of_day.index(AVAILABLE)
   else:
     return 0, UNAVAILABLE, UNAVAILABLE
 
@@ -70,9 +70,6 @@ def shuffle_elements(values):
 # allocation[x*CL_DAYS+y] represents day x at hour y
 # x from 0 (mon) to 4 (fri); y from 0 (8h) to 5 (21h)
 # it starts with 0 (zero) and is increased up to ROOMS
-allocation = []
-for i in range(CL_DAYS*CL_HOURS):
-  allocation.append(0)
 
 
 ######################## MAIN MAIN MAIN ##########################
@@ -88,6 +85,10 @@ for curr_gen in range(n_files):
   curr = open("genxx/gen" + str(curr_gen).zfill(2), "r")
 
   for i in range(CLASSES):
+    allocation = []
+    for i in range(CL_DAYS*CL_HOURS):
+      allocation.append(0)
+      
     pref_line = prefs.readline()
     pref_values = pref_line.split()
     curr_line = curr.readline()

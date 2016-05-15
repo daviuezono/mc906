@@ -1,9 +1,15 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 from random import randint
+from sys import argv
+from sys import exit
+
+if len(argv) != 2:
+  print "---> Usage: python gen_input.py $CLASSES"
+  exit(0)
 
 #parameters
-CLASSES = 80
+CLASSES = int(argv[1])
 CL_DAYS = 5 # mon, tue, wed, thu, fri
 CL_HOURS = 6 # 8, 10, 14, 16, 19, 21
 MATCH = 1

@@ -3,11 +3,17 @@
 import subprocess
 from os import system
 from random import shuffle
+from sys import argv
+from sys import exit
+
+if len(argv) != 4:
+  print "---> Usage: python main.py $CLASSES $MIN_GENS $ROOMS"
+  exit(0)
 
 ################### parameters/constants  ####################
-MIN_GENS = 15
-ROOMS = 1
-CLASSES = 80
+CLASSES = int(argv[1])
+MIN_GENS = int(argv[2])
+ROOMS = int(argv[3])
 CL_DAYS = 5 # mon, tue, wed, thu, fri
 CL_HOURS = 6 # 8, 10, 14, 16, 19, 21
 UNAVAILABLE = 0
@@ -26,34 +32,34 @@ def bitwise(one, two):
     else:
       out.append(el_one)
 
-  days_of_week = out[0 : CL_DAYS]
-  hours_of_day = out[CL_HOURS-1 : ]
+  days = out[0 : CL_DAYS]
+  hours = out[CL_HOURS-1 : ]
 
-  if   (days_of_week.count(PREFERENTIAL) == 1) and (hours_of_day.count(PREFERENTIAL) == 1):
-    return 3, days_of_week.index(PREFERENTIAL), hours_of_day.count(PREFERENTIAL)
-  elif (days_of_week.count(PREFERENTIAL) == 1) and (hours_of_day.count(AVAILABLE) == 1):
-    return 2, days_of_week.index(PREFERENTIAL), hours_of_day.count(AVAILABLE)
-  elif (days_of_week.count(AVAILABLE) == 1) and (hours_of_day.count(PREFERENTIAL) == 1):
-    return 2, days_of_week.index(AVAILABLE), hours_of_day.count(PREFERENTIAL)
-  elif (days_of_week.count(AVAILABLE) == 1) and (hours_of_day.count(AVAILABLE) == 1):
-    return 1, days_of_week.index(AVAILABLE), hours_of_day.count(AVAILABLE)
+  if   (days.count(PREFERENTIAL) == 1) and (hours.count(PREFERENTIAL) == 1):
+    return 3, days.index(PREFERENTIAL), hours.index(PREFERENTIAL)
+  elif (days.count(PREFERENTIAL) == 1) and (hours.count(AVAILABLE) == 1):
+    return 2, days.index(PREFERENTIAL), hours.index(AVAILABLE)
+  elif (days.count(AVAILABLE) == 1) and (hours.count(PREFERENTIAL) == 1):
+    return 2, days.index(AVAILABLE), hours.index(PREFERENTIAL)
+  elif (days.count(AVAILABLE) == 1) and (hours.count(AVAILABLE) == 1):
+    return 1, days.index(AVAILABLE), hours.index(AVAILABLE)
   else:
     return 0, UNAVAILABLE, UNAVAILABLE
 
 def shuffle_elements(values):
-  days_of_week = values[0 : CL_DAYS]
-  shuffle(days_of_week)
-  hours_of_day = values[CL_HOURS-1 : ]
-  shuffle(hours_of_day)
+  days = values[0 : CL_DAYS]
+  shuffle(days)
+  hours = values[CL_HOURS-1 : ]
+  shuffle(hours)
   
   string = ''
-  for i in range(len(days_of_week)):
+  for i in range(len(days)):
     if i:
       string += ' '
-    string += days_of_week[i]
-  for i in range(len(hours_of_day)):
+    string += days[i]
+  for i in range(len(hours)):
     string += ' '
-    string += hours_of_day[i]
+    string += hours[i]
   string += "\n"
   return string
 
@@ -67,22 +73,16 @@ copy_initial = "cp input genxx/gen00"
 system(copy_initial)
 
 ######## allocation: a linear vector for schedule ############
-# allocation[0] is Monday 8, allocation[1] is Monday 10, ..., 
-# allocation[7] is Tuesday 10, and so on.
-# allocation[x*CL_DAYS+y] represents day x at hour y
-# x from 0 (mon) to 4 (fri); y from 0 (8h) to 5 (21h)
-# it starts with 0 (zero) and is increased up to ROOMS
-allocation = []
-for i in range(CL_DAYS*CL_HOURS):
-  allocation.append(0)
+
 
 
 ######################## MAIN MAIN MAIN ##########################
 ######################## MAIN MAIN MAIN ##########################
 
 print "\n"
-print "SCORES"
-print "------"
+print "=================================="
+print "genxx: scr |  0  |  1  |  2  |  3 "
+print "----------------------------------"
 will_have_next_gen = 1
 curr_gen = 0
 scores = []
@@ -93,13 +93,27 @@ while will_have_next_gen:
   curr = open("genxx/gen" + str(curr_gen).zfill(2), "r")
   next = open("genxx/gen" + str(curr_gen+1).zfill(2), "w")
 
+  # counter variables to debug.
+  pp = []
+  for i in range(4):
+    pp.append(0)
+
   for i in range(CLASSES):
+
+    # allocation[x*CL_DAYS+y] represents day x at hour y
+    # x from 0 (mon) to 4 (fri); y from 0 (8h) to 5 (21h)
+    # it starts with 0 (zero) and is increased up to ROOMS
+    allocation = []
+    for i in range(CL_DAYS*CL_HOURS):
+      allocation.append(0)
+
     pref_line = prefs.readline()
     pref_values = pref_line.split()
     curr_line = curr.readline()
     curr_values = curr_line.split()
-    #print "[DEBUG] gen" + str(curr_gen).zfill(2) + " @ line " + str(i).zfill(2)
     result, day, hour = bitwise(pref_values, curr_values)
+    # pp is a debug variable
+    pp[result] += 1
     if bool(result) and (allocation[day*CL_DAYS+hour] < ROOMS):
       curr_score += result
       allocation[day*CL_DAYS+hour] += 1
@@ -108,11 +122,13 @@ while will_have_next_gen:
       next_line = shuffle_elements(curr_values)
       next.write(next_line)
 
+  # stop criteria
   if (curr_gen >= MIN_GENS) and (curr_score == scores[-1]) and (curr_score == scores[-2]):
     will_have_next_gen = 0
 
   scores.append(curr_score)
-  print "gen" + str(curr_gen).zfill(2) + ": " + str(scores[curr_gen])
+  #print "gen" + str(curr_gen).zfill(2) + ": " + str(scores[curr_gen]).zfill(3) + " | " + str(pp[0]).zfill(2) + " | " + str(pp[1]).zfill(2) + " | " + str(pp[2]).zfill(2) + " | " + str(pp[3]).zfill(2)
+  print "gen%02d: %3d | %3d | %3d | %3d | %3d" % (curr_gen, scores[curr_gen], pp[0], pp[1], pp[2], pp[3])
 
   curr_gen += 1
   curr_score = 0
@@ -121,4 +137,5 @@ while will_have_next_gen:
   curr.close()
   next.close()
 
+print "=================================="
 print "\n"
