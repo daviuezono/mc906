@@ -34,12 +34,12 @@
 
 \urlstyle{tt}
 % Indicar o nome do autor e o curso/nível (grad-mestrado-doutorado-especial)
-\title{Título do Trabalho}
+\title{Programação Evolutiva aplicada ao problema de Alocação de Turmas em Salas de Aula}
 \author{%
- \IEEEauthorblockN{Nome do autor\,\IEEEauthorrefmark{1}}
+ \IEEEauthorblockN{Davi Kooji Uezono\,\IEEEauthorrefmark{1}}
  \IEEEauthorblockA{\IEEEauthorrefmark{1}%
-                   Ciência da Computação - Graduação \\
-                   E-mail: \ldots@ic.unicamp.br}
+                   Engenharia da Computação - Graduação \\
+                   E-mail: davi.uezono@students.ic.unicamp.br}
 }
 
 %%*****************************************************************************
@@ -49,12 +49,15 @@
 %%*****************************************************************************
 % Resumo do trabalho
 \begin{abstract}
- O resumo deve conter uma breve descrição sobre várias partes do seu trabalho que serão tratadas no decorrer do texto. Primeiramente, pode-se descrever brevemente o problema no qual você está trabalhando: Por que você está desenvolvendo este trabalho? Qual a motivação para este desenvolvimento? Por que ele é importante? O resumo deve conter também um breve descritivo da metodologia que você usou no desenvolvimento: Que problema foi tratado? Como a solução foi construída/desenvolvida? Quais as tecnologias utilizadas? Finalmente, deve falar um pouco sobre os resultados que você conseguiu: o resultado final ficou bom? Quais os seus principais diferenciais? Qual a eficiência do desenvolvimento?
+ O problema de encontrar uma alocação eficiente de turmas em salas de aula é um problema bastante complexo. Imagine um lugar como a Unicamp, onde a relação de disciplinas de graduação oferecidas em toda a universidade nos remete a aproximadamente oito mil disciplinas, cada uma contém um número de créditos diferente, algumas turmas tem mais ou menos alunos, outras exigem salas especiais com bancadas maiores, computadores, mesas de laboratório ou um vão livre, os professores têm preferências por aulas no período diurno ou no noturno por causa de outros compromissos pessoais. Há inúmeras variáveis que podem ser consideradas, e para efeito de simplificação, nem todas foram consideradas no momento deste trabalho. A solução foi implementada em Python e Shell Script com Programação Evolutiva utilizando mutações entre cada geração para chegar em uma que seja factível, a partir de uma base de dados que contém a preferência de dias e horários dos professores que lecionam a matéria. O projeto ainda permite parametrizar alguns valores, como o número de salas disponíveis, de turmas a serem alocadas, e o número mínimo de gerações para o critério de parada. Os resultados são obtidos em menos de um minuto para uma entrada contendo cinco mil turmas, mínimo de vinte e cinco gerações e trinta salas de aula disponíveis, onde sobram cerca de trinta turmas sem alocação em aproximadamente trinta gerações.
+ 
+ 
+ 
 \end{abstract}
 
 % Indique três palavras-chave que descrevem o trabalho
 \begin{IEEEkeywords}
- Palavras-chave
+ programação evolutiva, alocação de salas, otimização
 \end{IEEEkeywords}
 
 %%*****************************************************************************
@@ -62,18 +65,19 @@
 
 \section{Introdução}
 
-Na introdução você deve descrever os aspectos mais relevantes sobre a revisão bibliográfica que fez e do problema que você decidiu tratar. Quais foram os pontos estudados/pesquisados? Quais os outros trabalhos similares ao seu que você encontrou? 
+Durante um trabalho voluntário com foco educacional desenvolvido na faculdade, uma das minhas funções era realizar a alocação de professores nas nossas salas de aula do projeto. Na época, ainda no início da graduação, eu sabia que deveria ter como resolver este problema computacionalmente, mas não sabia exatamente como isso poderia ser feito. A motivação para resolvê-lo ficou inerte durante algum tempo, mas após ter estudado mais sobre o problema nas disciplinas de Teoria de Computação e notar que a modelagem do problema não era tão complicada como parecia ser, surgiu a oportunidade de resolvê-lo neste trabalho.
 
-Também na introdução espera-se que você descreva um pouco sobre a motivação de trabalhar com esse tema. A descrição do seu trabalho será feita em detalhes nas próximas seções do artigo.
+O problema de alocação de salas de aula é um dos problemas comumente estudados em disciplinas de Teoria de Computação, e é um dos problemas \textit{NP-completo} na versão de se determinar a solução exata. O problema consiste em partir de um conjunto de dados que representa a disponibilidade/preferência de professores para lecionar suas disciplinas ao longo dos dias da semana e horários e evoluir uma entrada que satisfaz alguns casos, até que se chegue em algo factível, maximizando o casamento com a disponibilidade/preferência recebida. Esta evolução é realizada aplicando-se mutações em alguns indivíduos da população que não são satisfeitos pela atribuição atual.
 
+Ao longo deste trabalho serão apresentados com maiores detalhes a implementação dos algoritmos que geram os dados de entrada (seção 2) e do algoritmo que evolui a solução (seção 3). Alguns experimentos foram realizados na tentativa de validar o algoritmo, e os resultados são apresentados na seção 4. A seção 5 abordará algumas sugestões de como melhorar a solução, incluindo alguns outros parâmetros que foram deixados de lado nesta versão inicial. Conclusões serão abordadas na seção 6.
 
-No final da introdução, é comum inserir um parágrafo descrevendo o que será encontrado em cada seção no restante do seu texto. Exemplo: Este trabalho encontra-se organizado da seguinte forma: a seção 2 apresenta X. A seção 3 descreve Y. Os resultados são apresentados na seção 4, e as conclusões são apresentadas na seção 5.
+\section{Algoritmos para dados de entrada}
 
-\section{Seções}
+Tem-se dois algoritmos de entrada, um que lista as disponibilidades/preferências dos professores, e outro que cria uma versão inicial do problema. Ambos os arquivos tem a mesma estrutura, contendo $M$ linhas e onze colunas, onde $M$ é o número de salas de aula, com cinco dias da semana e seis horários de aula por dia (totalizando as onze colunas). 
 
-Utilize outras seções e subseções para abordar o problema. 
+O arquivo de disponibilidade contém valores $0$, $1$ ou $2$ que indicam \textit{indisponibilidade}, \textit{disponibilidade} e \textit{preferência}, respectivamente, e foi gerado totalmente ao acaso. Já o arquivo de entrada contém apenas os valores $0$ e $1$, indicando uma \textit{não atribuição} e uma \textit{atribuição}, respectivamente, e contém apenas um valor atribuição nas colunas de dia da semana e apenas um valor atribuição nas colunas de horário de aula. Dada as suas restrições, este também foi gerado aleatoriamente. Optou-se pela implementação de ambos em Python devido a facilidade da linguagem na manipulação de dados armazenados em arquivos ou strings em memória.
 
-\subsection{Uma subseção}
+\subsection{subseção}
 
 Se precisar, você pode usar listas, tais como
 
@@ -87,9 +91,19 @@ ou
  \item Item 2
 \end{enumerate}
 
-\section{Trabalho Proposto}
+\section{Algoritmo de programação evolutiva}
 
-Nesta seção descreva de forma abrangente, porém clara e organizada, o seu trabalho.
+O algoritmo responsável por determinar uma solução aproximada é pequeno e consideravelmente simples, porém o tratamento dos dados provenientes dos arquivos de entrada deve ser feito cuidadosamente. O volume de dados é grande e pode não ser fácil distinguir a região do arquivo em que se encontra pois os dados são aleatórios e em baixa variabilidade.
+
+Inicia-se o algoritmo com um \textit{loop} principal, onde cada iteração deste é o tratamento dos dados de uma geração. Vamos chamá-la de geração \textit{corrente}. No início do problema, o arquivo de entrada é tratado como geração zero. A cada iteração, examina-se os dados da geração corrente com os arquivos de disponibilidade/preferência, produzindo o arquivo da próxima geração. Durante a análise, cada linha de um arquivo representa um indivíduo na população, que tem uma nota atribuída conforme a satisfação.
+
+Caso não haja satisfação, a nota é zero e o indivíduo é um candidato a sofrer mutação para a próxima geração. Caso ocorra a satisfação, verifica-se como este ocorreu, isto é, se o dia da semana era um de \textit{disponibilidade} ou de \textit{preferência} e se o horário era um de \textit{disponibilidade} ou de \textit{preferência}; se ambos os critérios forem de disponibilidade apenas, a nota é um; se apenas um dos critérios for de disponibilidade, mas o outro for de preferência, a nota é dois; se, porém, ambos os critérios forem de preferência, então o indivíduo recebe a nota máxima, que é três.
+
+Depois de calcular a nota para cada indivíduo, caso a nota seja um valor positivo (isto é, caso tenha ocorrido uma satisfação), verifica-se se ainda existe salas de aula disponíveis para o horário. Se ainda existir salas disponíveis para o horário, a turma fica definitivamente alocada; caso contrário, não. A função de \textit{fitness} é calculada como a somatória das notas de todas as turmas (indivíduos) que estão devidamente alocados na solução (geração) corrente. Isto significa que mesmo que haja satisfação de disponibilidade/preferência dos professores, caso não haja salas disponíveis, então a nota desta atribuição não é contabilizada no \textit{fitness} da geração.
+
+O critério de mutação é uma reordenação aleatória da condição não satisfeita, tanto dentre os dias da semana quanto dentre os horários. A taxa de mutação controla o percentual de indivíduos que sofrem mutação entre uma geração e outra. Idealmente, ela deve ser próxima de 15\%.
+
+Existem dois critérios de parada implementado no algoritmo. Um deles estabele um número mínimo de gerações para ocorrer. Neste caso, as mutações devem continuar ocorrendo ainda que não haja ganhos na função de fitness. O outro critério diz que se o fitness da geração corrente for exatamente igual ao das duas últimas gerações, então o algoritmo não precisa continuar varrendo as próximas gerações, porque já se pode observar uma tendência de estagnação deste valor.
 
 \subsection{Tabelas}
 
@@ -120,9 +134,20 @@ seguinte.
 Para citar esta tabela, em qualquer ponto no texto, como Tabela~\ref{tab:tab1}.
 
 
-\section{Materiais e Métodos}
+\section{Experimentos}
+Utiliza-se dois conjuntos de testes, com três testes em cada. No primeiro conjunto de testes, do primeiro para o segundo teste varia-se (dobra) a quantidade de salas disponível e compara-se o resultado. Depois varia-se (dobra) a taxa de mutação e compara-se o segundo com o terceiro resultado. Já no segundo conjunto de testes, com uma população maior, mantém-se fixo todos os parâmetros e varia-se apenas a quantidade de salas, dobrando a cada quantidade de salas disponíveis a cada teste. Adicionalmente, pode-se comparar o segundo teste do primeiro conjunto com o primeiro teste do segundo conjunto, onde a variação se dá apenas pela ordem de grandeza do tamanho da população.
 
-Todo trabalho deve ser submetido a algum tipo de teste para que possa ser avaliado. Na verdade, buscamos aqui uma validação com um caráter mais científico de seu trabalho (validação de hipótese). Busca-se identificar quais os seus pontos fortes e fracos. Nesta seção você deve descrever claramente quais foram e como foram conduzidos os testes, quais os materiais e as metodologias empregadas.   
+
+
+
+
+
+
+
+
+
+
+
 
 Uma figura pode ser posicionada em qualquer lugar no texto, como no exemplo seguinte da Figura~\ref{fig:fig1}.
 
@@ -140,6 +165,10 @@ referências através dos seus rótulos. Exemplo: \cite{Rowling:1997}\cite{Reynolds
 \section{Resultados e Discussão}
 
 Nesta seção você deve apresentar claramente os resultados obtidos para os testes efetuados. Procure organizar os dados utilizando uma linguagem científica. Algumas opções são o uso de tabelas e gráficos, para que a compreensão seja fácil e rápida. 
+
+\section{Melhorias}
+
+
 
 \section{Conclusões}
 

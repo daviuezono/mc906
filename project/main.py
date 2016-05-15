@@ -6,14 +6,15 @@ from random import shuffle
 from sys import argv
 from sys import exit
 
-if len(argv) != 4:
-  print "---> Usage: python main.py $CLASSES $MIN_GENS $ROOMS"
+if len(argv) != 5:
+  print "---> Usage: python main.py $CLASSES $MIN_GENS $ROOMS $RATIO"
   exit(0)
 
 ################### parameters/constants  ####################
 CLASSES = int(argv[1])
 MIN_GENS = int(argv[2])
 ROOMS = int(argv[3])
+RATIO = int(argv[4])
 CL_DAYS = 5 # mon, tue, wed, thu, fri
 CL_HOURS = 6 # 8, 10, 14, 16, 19, 21
 UNAVAILABLE = 0
@@ -89,6 +90,8 @@ scores = []
 while will_have_next_gen:
 
   curr_score = 0
+  mutation = int(CLASSES*RATIO/100)
+
   prefs = open("prefs", "r")
   curr = open("genxx/gen" + str(curr_gen).zfill(2), "r")
   next = open("genxx/gen" + str(curr_gen+1).zfill(2), "w")
@@ -119,8 +122,12 @@ while will_have_next_gen:
       allocation[day*CL_DAYS+hour] += 1
       next.write(curr_line)
     else:
-      next_line = shuffle_elements(curr_values)
-      next.write(next_line)
+      if (mutation > 0):
+        next_line = shuffle_elements(curr_values)
+        next.write(next_line)
+        mutation -= 1;
+      else:
+        next.write(curr_line)
 
   # stop criteria
   if (curr_gen >= MIN_GENS) and (curr_score == scores[-1]) and (curr_score == scores[-2]):
